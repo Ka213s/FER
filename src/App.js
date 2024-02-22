@@ -6,9 +6,8 @@ import './css/customer-fillter.css';
 import './css/customer-trangchu-banvila.css';
 import './css/customer-chaomung.css';
 import './css/customer-gioithieu.css';
-
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Header from './header-footer/Header';
 import Header2 from './header-footer/Header2';
 import Footer from './header-footer/Footer';
@@ -22,22 +21,32 @@ import AuthRoleFilter from './authentication/AuthRoleFilter';
 import Agencytindang from './components/Agency/agency-tindang';
 import Agencythongtinchitiet from './components/Agency/agency-thongtinchitiet';
 import Customergioithieu from './components/Customer/customer-gioithieu';
+
 function App() {
   const [userInfo, setUserInfo] = useState(null);
+  const [initialPageLoad, setInitialPageLoad] = useState(true);
 
   const handleLoginSuccess = (userLoginBasicInformationDto) => {
     // Callback function to update user information in App.js state
     setUserInfo(userLoginBasicInformationDto);
   };
 
-  return (
+  useEffect(() => {
+    // Once the component mounts, update the state to indicate that the initial page load is complete
+    setInitialPageLoad(false);
+  }, []);
 
+  return (
     <Router>
       <div className="App">
         {/* Header should be rendered outside Routes */}
         <Header />
         <Header2 />
         <Routes>
+          <Route
+            path="/"
+            element={initialPageLoad ? <Navigate to="/trangchu" replace /> : <Navigate to="/" />}
+          />
           <Route path="/dangnhap" element={<Login onLoginSuccess={handleLoginSuccess} />} />
           <Route
             path="/home2"
@@ -61,8 +70,7 @@ function App() {
           <Route path="/acencytindang" element={<Agencytindang />} />
           <Route path="/agencythongtinchitiet" element={<Agencythongtinchitiet />} />
           <Route path="/agencythongtinchitiet/:id" element={<Agencythongtinchitiet />} />
-          <Route path="/" element={<Body1 />} />
-          {/* Add more routes if needed */}
+          {/* Remove the default route */}
         </Routes>
         {/* Footer should be rendered outside Routes */}
         <Footer />

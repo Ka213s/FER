@@ -80,7 +80,7 @@ const Login = () => {
             </div>
             <div className='re-fo'>
                 <div className='remember-login'>
-                    <input type='checkbox'></input>
+                    <input className='ghinhodangnhap' type='checkbox'></input>
                     <span>Ghi nhớ đăng nhập</span>
                 </div>
                 <a className='forget-pass' href='quenmatkhau'>Quên mật khẩu</a>

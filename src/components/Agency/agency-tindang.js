@@ -27,7 +27,7 @@ export default function Agencytindang() {
         axios.get('http://firstrealestate-001-site1.anytempurl.com/api/invester/getAllRealEstate')
             .then(response => {
                 // Lọc tất cả các bất động sản có Investor ID: 2
-                const estatesWithInvestorId2 = response.data.filter(estate => estate.investorId === 5);
+                const estatesWithInvestorId2 = response.data.filter(estate => estate.investorId === 6);
                 setRealEstates(estatesWithInvestorId2);
             })
             .catch(error => {

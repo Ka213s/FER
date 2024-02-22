@@ -11,6 +11,10 @@ import { Link } from 'react-router-dom';
 import UserInvestor from '../../list/userInvestor';
 import InvestorMenu from './investor-menu';
 const Home = () => {
+    const [directs, setDirects] = useState([]);
+    const [selectedDirect, setSelectedDirect] = useState('');
+    const [selectedDirectId, setSelectedDirectId] = useState('');
+
     const [successMessage, setSuccessMessage] = useState("");
     const [previewImage, setPreviewImage] = useState([]);
     const [previewImages1, setPreviewImages1] = useState([]);
@@ -192,6 +196,36 @@ const Home = () => {
             console.log('Data pushed to Swagger successfully.');
         } catch (error) {
             console.error('Failed to push data to Swagger:', error.message);
+        }
+    };
+    useEffect(() => {
+        const fetchDirects = async () => {
+            try {
+                const response = await axios.get('http://firstrealestate-001-site1.anytempurl.com/api/direct/getAllDirect');
+                setDirects(response.data); // Lưu trữ dữ liệu từ API vào state
+            } catch (error) {
+                console.error('Error fetching directs:', error.message);
+            }
+        };
+
+        fetchDirects();
+    }, []);
+
+    const handleDirectChange = (e) => {
+        const selectedDirectName = e.target.value;
+        setSelectedDirect(selectedDirectName);
+        // Tìm ID tương ứng của hướng
+        const selectedDirectObject = directs.find(direct => direct.directName === selectedDirectName);
+        if (selectedDirectObject) {
+            setSelectedDirectId(selectedDirectObject.id);
+            console.log("ID của hướng Tây Nam là:", selectedDirectObject.id);
+            // Cập nhật state hardcodedValues với directId mới
+            setHardcodedValues(prevState => ({
+                ...prevState,
+                directId: selectedDirectObject.id
+            }));
+        } else {
+            setSelectedDirectId('');
         }
     };
 
@@ -400,6 +434,7 @@ const Home = () => {
                     </div>
                     <span className='tieude1'>Số nhà</span>
                     <input
+                        className='sonha'
                         type="text"
                         value={propertyInfo.address}
                         onChange={(e) => setPropertyInfo({ ...propertyInfo, address: e.target.value })}
@@ -518,6 +553,14 @@ const Home = () => {
                                 value={propertyInfo.price}
                                 onChange={(e) => formatAndSetPrice(e.target.value)}
                             />
+                        </div>
+                        <div className='dropdown'>
+                            <select className='chonhuong' id="directSelect" value={selectedDirect} onChange={handleDirectChange}>
+                                <option value="">Chọn Hướng</option>
+                                {directs.map(direct => (
+                                    <option key={direct.id} value={direct.directName}>{direct.directName}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
                     <span className='chonbatdongsan'>Chọn các ảnh bất động sản</span>

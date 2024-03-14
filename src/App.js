@@ -89,7 +89,7 @@ import AdminRealEstateDetail from './components/Admin/admin-RealEstateDetail';
 import Adminduyettindang from './components/Admin/admin-duyettindang';
 import AdminThongtinbatongsan from './components/Admin/admin-Thongtinbatongsan';
 
-function RealEstate() {
+function App() {
   const [userInfo, setUserInfo] = useState(null);
   const [initialPageLoad, setInitialPageLoad] = useState(true);
 
@@ -157,4 +157,4 @@ function RealEstate() {
   );
 }
 
-export default RealEstate;
+export default App;

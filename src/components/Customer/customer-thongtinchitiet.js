@@ -3,7 +3,7 @@ import axios from 'axios';
 import { useParams } from 'react-router-dom';
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
-import { formatISO } from 'date-fns';
+import { formatISO, addDays } from 'date-fns'; // import thêm hàm addDays từ date-fns
 import CallApi from '../CallApi';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -16,9 +16,60 @@ export default function Customerthongtinchitiet() {
     const [locationInfo, setLocationInfo] = useState(null);
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [selectedTime, setSelectedTime] = useState(null);
+    const [reservationDataForSelectedDate, setReservationDataForSelectedDate] = useState(null);
     const userLoginBasicInformationDto = JSON.parse(localStorage.getItem('userLoginBasicInformationDto'));
     const [selectedImage, setSelectedImage] = useState(null);
     const [showBookingInfoPopup, setShowBookingInfoPopup] = useState(false);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const response = await CallApi.getAllRealEstate();
+                const foundRealEstate = response.find(item => item.id === parsedId);
+                setRealEstate(foundRealEstate);
+
+                const locationResponse = await CallApi.getAllLocation();
+                const foundLocation = locationResponse.find(location => location.id === foundRealEstate.locationId);
+                setLocationInfo(foundLocation);
+
+                const callDataAllAccount = await CallApi.getAllAccount();
+                const foundUser = callDataAllAccount.find(user => user.id === userLoginBasicInformationDto.accountId);
+                if (foundUser) {
+                    setUserData({
+                        username: foundUser.username,
+                        phoneNumber: foundUser.phoneNumber,
+                        email: foundUser.email
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        };
+        fetchData();
+    }, [id]);
+
+    useEffect(() => {
+        const fetchReservationTimes = async () => {
+            try {
+                const reservationTimeResponse = await CallApi.GetAllReservationTime();
+                const formattedSelectedDate = formatISO(selectedDate, { representation: 'date' }); // Format selectedDate
+                const selectedDateReservationData = reservationTimeResponse.find(reservation => formatDate(reservation.date) === formattedSelectedDate);
+                setReservationDataForSelectedDate(selectedDateReservationData);
+            } catch (error) {
+                console.error('Error fetching reservation times for selected date:', error);
+            }
+        };
+
+        fetchReservationTimes();
+    }, [selectedDate]);
+
+    const formatDate = (dateString) => {
+        const date = new Date(dateString);
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
 
     const handleClick = (imageUrl) => {
         setSelectedImage(imageUrl);
@@ -40,82 +91,57 @@ export default function Customerthongtinchitiet() {
         setSelectedImage(realEstate.realEstateImages[nextIndex].imageUrl);
     };
 
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await axios.get(`http://firstrealestate-001-site1.anytempurl.com/api/invester/getAllRealEstate`);
-                const foundRealEstate = response.data.find(item => item.id === parsedId);
-                setRealEstate(foundRealEstate);
-
-                const locationResponse = await axios.get(`http://firstrealestate-001-site1.anytempurl.com/api/location/getAllLocation`);
-                const foundLocation = locationResponse.data.find(location => location.id === foundRealEstate.locationId);
-                setLocationInfo(foundLocation);
-
-                const callDataAllAccount = await CallApi.getAllAccount();
-                const foundUser = callDataAllAccount.find(user => user.id === userLoginBasicInformationDto.accountId);
-                if (foundUser) {
-                    setUserData({
-                        username: foundUser.username,
-                        phoneNumber: foundUser.phoneNumber,
-                        email: foundUser.email
-                    });
-                }
-            } catch (error) {
-                console.error('Error fetching data:', error);
-            }
-        };
-        fetchData();
-    }, [id]);
-
     const handleTimeChange = (e) => {
-        const selectedHour = parseInt(e.target.value.split(':')[0]);
-        if (selectedHour >= 8 && selectedHour < 18) {
-            setSelectedTime(e.target.value);
-        } else {
-            setSelectedTime(null);
-            toast.error('Vui lòng chọn thời gian từ 8h sáng đến 6h tối.');
-        }
+        const selectedValue = e.target.value;
+        setSelectedTime(selectedValue);
     };
 
     const handleBooking = async () => {
-        const callDataReservations = await CallApi.getAllReservations();
         if (selectedDate && selectedTime && userLoginBasicInformationDto && userLoginBasicInformationDto.accountId && parsedId) {
             const formattedDate = formatISO(selectedDate, { representation: 'complete' });
-            const hasExistingReservation = callDataReservations.find(reservation => reservation.customerId === userLoginBasicInformationDto.accountId && reservation.status === 1);
-            if (hasExistingReservation) {
-                toast.error('Bạn đã đặt chỗ trước đó.');
-                return;
-            }
 
-            const reservationData = {
-                bookingDate: formattedDate,
-                bookingTime: selectedTime,
-                customerId: userLoginBasicInformationDto.accountId,
-                realEstateId: parsedId
-            };
-
+            // Fetch existing reservations for the user
             try {
+                const existingReservations = await CallApi.getAllReservations();
+                const hasExistingReservation = existingReservations.some(reservation =>
+                    reservation.customerId === userLoginBasicInformationDto.accountId && reservation.status === 1
+                );
+
+                // Check if the user already has a reservation for the selected date
+                if (hasExistingReservation) {
+                    toast.error('Bạn đã có một đặt chỗ vào ngày này. Vui lòng chọn ngày khác.');
+                    return; // Exit if there's an existing reservation
+                }
+
+                // Proceed to create a new reservation if there's no existing reservation
+                const reservationData = {
+                    bookingDate: formattedDate, // Sử dụng ngày đã chọn
+                    bookingTime: selectedTime,
+                    customerId: userLoginBasicInformationDto.accountId,
+                    realEstateId: parsedId
+                };
+
                 const response = await axios.post('http://firstrealestate-001-site1.anytempurl.com/api/reservation/CreateReservation', reservationData);
-                console.log('Data sent:', reservationData);
-                console.log('Response:', response.data);
                 toast.success('Đặt chỗ thành công!');
+
             } catch (error) {
-                console.error('Error creating reservation:', error);
-                toast.error('Đã xảy ra lỗi khi đặt chỗ. Vui lòng thử lại sau.');
+                console.error('Error during reservation process:', error);
+                toast.error('Đã xảy ra lỗi khi kiểm tra hoặc tạo đặt chỗ. Vui lòng thử lại sau.');
             }
         } else {
             toast.error('Vui lòng điền đầy đủ thông tin đặt lịch.');
         }
     };
 
+    const tenNgayKeTiep = Array.from({ length: 10 }, (_, index) => addDays(new Date(), index + 1));
+
     return (
         <div className="real-estate-info-container">
-            <ToastContainer />
             {realEstate && locationInfo ? (
                 <div className='xxxxx'>
                     <div className='hinhanhmotathongtin'>
                         <div className='col-md-6 hinhanh'>
-                            <div className="image-container">
+                            <div className="image-container1">
                                 <img
                                     src={realEstate.realEstateImages[0].imageUrl}
                                     alt={realEstate.realEstateImages[0].imageName}
@@ -230,24 +256,36 @@ export default function Customerthongtinchitiet() {
                                 </div>
                                 <div className='col-md-6 anhpopuptest'>
                                     {userData && (
-                                        <div>
-                                            <p>Họ và Tên: {userData.username}</p>
-                                            <p>Số Điện Thoại: {userData.phoneNumber}</p>
-                                            <p>Email: {userData.email}</p>
+                                        <div className='thongtinkhachdat'>
+                                            <p><b>Họ và Tên:</b> {userData.username}</p>
+                                            <p><b>Số Điện Thoại: </b> {userData.phoneNumber}</p>
+                                            <p><b>Email: </b> {userData.email}</p>
                                         </div>
                                     )}
                                     <button className="close-btn" onClick={() => setShowBookingInfoPopup(false)}>Đóng</button>
-                                    <h3>Chọn ngày đặt lịch:</h3>
-                                    <DatePicker className="date-picker" selected={selectedDate} onChange={date => setSelectedDate(date)} />
-                                    <h3>Chọn giờ đặt lịch:</h3>
-                                    <input
-                                        type="time"
-                                        className="time-picker"
-                                        value={selectedTime}
-                                        onChange={handleTimeChange}
-                                        min="08:00"
-                                        max="18:00"
-                                    />
+                                    <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>Chọn ngày đặt lịch:</h3>
+                                    <DatePicker className="date-picker" selected={selectedDate} onChange={date => setSelectedDate(date)} minDate={new Date()} maxDate={tenNgayKeTiep[9]} />
+                                    <h3 style={{ fontSize: '20px', fontWeight: 'bold' }}>Chọn giờ đặt lịch:</h3>
+                                    <select onChange={handleTimeChange}>
+                                        <option>Chọn khung thời gian</option>
+                                        {reservationDataForSelectedDate && (
+                                            <>
+                                                {reservationDataForSelectedDate.time1 && <option>{reservationDataForSelectedDate.time1}</option>}
+                                                {reservationDataForSelectedDate.time2 && <option>{reservationDataForSelectedDate.time2}</option>}
+                                                {reservationDataForSelectedDate.time3 && <option>{reservationDataForSelectedDate.time3}</option>}
+                                                {reservationDataForSelectedDate.time4 && <option>{reservationDataForSelectedDate.time4}</option>}
+                                            </>
+                                        )}
+                                        {/* Nếu dữ liệu bị null hoặc không có giờ đặt lịch, cứng 4 giờ đặt lịch mặc định */}
+                                        {/* {!reservationDataForSelectedDate && (
+                                            <>
+                                                <option>8:00 - 10:00</option>
+                                                <option>11:00 - 13:00</option>
+                                                <option>14:00 - 16:00</option>
+                                                <option>17:00 - 19:00</option>
+                                            </>
+                                        )} */}
+                                    </select>
                                     <button className="booking-btn" onClick={handleBooking}>Gửi dữ liệu đặt lịch</button>
                                 </div>
                             </div>
@@ -257,6 +295,7 @@ export default function Customerthongtinchitiet() {
             ) : (
                 <p>Loading...</p>
             )}
-        </div >
+            <ToastContainer />
+        </div>
     );
 }

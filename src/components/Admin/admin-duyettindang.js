@@ -1,27 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import AgencyMenu from './agency-menu';
-import UserAgency from '../../list/userAgency';
+import { useNavigate } from 'react-router-dom';
+import { ToastContainer, toast } from 'react-toastify'; // Import ToastContainer và toast từ thư viện react-toastify
+import 'react-toastify/dist/ReactToastify.css';
 
 const statusOptions = [
     { value: 1, label: 'Đang xử lý' },
-    { value: 2, label: 'Chờ hoàn thành phí đăng bài' },
-    { value: 3, label: 'Sắp mở bán' },
-    { value: 4, label: 'Đang mở bán' },
-    { value: 5, label: 'Đã cọc' },
-    { value: 6, label: 'Đã bán' }
+    { value: 2, label: 'Mở bán' },
 ];
 
 export default function Agencyduyettindang() {
     const [realEstates, setRealEstates] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
     const [unsavedChanges, setUnsavedChanges] = useState({});
     const [unsavedEstateIds, setUnsavedEstateIds] = useState([]);
-    const userLoginBasicInformationDto = JSON.parse(localStorage.getItem('userLoginBasicInformationDto'));
+    const navigate = useNavigate();
+
     useEffect(() => {
         const fetchRealEstates = async () => {
             try {
                 const response = await axios.get('http://firstrealestate-001-site1.anytempurl.com/api/invester/getAllRealEstate');
-                const filteredRealEstates = response.data.filter(realEstate => realEstate.investorId === 6);
+                const filteredRealEstates = response.data;
                 setRealEstates(filteredRealEstates);
             } catch (error) {
                 console.error('Error fetching real estates:', error);
@@ -35,7 +34,7 @@ export default function Agencyduyettindang() {
         try {
             const response = await axios.get(`http://firstrealestate-001-site1.anytempurl.com/api/location/getAllLocation`);
             const locationDetails = response.data.find(location => location.id === locationId);
-            return locationDetails ? locationDetails : null;
+            return locationDetails || null;
         } catch (error) {
             console.error('Error fetching location details:', error);
             return null;
@@ -102,8 +101,13 @@ export default function Agencyduyettindang() {
             if (!unsavedEstateIds.includes(realEstateId)) {
                 setUnsavedEstateIds(prevIds => [...prevIds, realEstateId]);
             }
+
+            // Thông báo lưu thành công
+         
         } catch (error) {
             console.error('Error fetching real estate details:', error);
+            // Thông báo lỗi khi không thể lưu
+            toast.error('Lưu trạng thái thất bại. Vui lòng thử lại sau!');
         }
     };
 
@@ -127,38 +131,63 @@ export default function Agencyduyettindang() {
             // Đánh dấu rằng tất cả thay đổi đã được lưu
             setUnsavedChanges({});
             setUnsavedEstateIds([]);
-            console.log('Tất cả các thay đổi đã được lưu thành công!');
+            // Thông báo lưu thành công
+            toast.success('Tất cả các thay đổi đã được lưu thành công!');
         } catch (error) {
             console.error('Error saving real estate data:', error);
+            // Thông báo lỗi khi không thể lưu
+            toast.error('Lưu thất bại. Vui lòng thử lại sau!');
         }
     };
 
+    const handleNavigateAndSendId = (realEstateId) => {
+        navigate(`/thongtinbatdongsan/${realEstateId}`);
+    };
+
+    // Hàm để lọc bất động sản theo tên
+    const filteredRealEstates = realEstates.filter(realEstate =>
+        realEstate.realestateName.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     return (
-        <div class="outer-container">
+        <div className="outer-container">
             <div className='container'>
-                <AgencyMenu
-                    userLoginBasicInformationDto={userLoginBasicInformationDto}
-                    UserMenu={UserAgency}
-                />
                 <div className='col-md-9 danhsachbdscanduyet'>
                     <h1>Danh sách bất động sản cần được duyệt</h1>
-                    <div>
-                        <ul>
-                            {realEstates.map(realEstate => (
-                                <li key={realEstate.id} className='danhsachbdscanduyettheobds'>
-                                    {realEstate.realestateName}
-                                    <select className='luachon' value={realEstate.status} onChange={(event) => handleStatusChange(event, realEstate.id)}>
-                                        {statusOptions.map(option => (
-                                            <option key={option.value} value={option.value}>{option.label}</option>
-                                        ))}
-                                    </select>
-                                </li>
-                            ))}
-                        </ul>
+                    <input
+                        type="text"
+                        placeholder="Nhập tên bất động sản để lọc"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                    />
+                    <div className="table-container">
+                        <table className="table">
+                            <thead>
+                                <tr>
+                                    <th onClick={() => handleNavigateAndSendId('')} style={{ cursor: 'pointer' }}>Tên bất động sản</th>
+                                    <th>Trạng thái</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredRealEstates.map(realEstate => (
+                                    <tr key={realEstate.id} className='danhsachbdscanduyettheobds'>
+                                        <td onClick={() => handleNavigateAndSendId(realEstate.id)} style={{ cursor: 'pointer' }}>{realEstate.realestateName}</td>
+                                        <td>
+                                            <select className='luachon' value={realEstate.status} onChange={(event) => handleStatusChange(event, realEstate.id)}>
+                                                {statusOptions.map(option => (
+                                                    <option key={option.value} value={option.value}>{option.label}</option>
+                                                ))}
+                                            </select>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
                     </div>
-                    {unsavedEstateIds.length > 0 && <button onClick={handleSaveData}>Lưu</button>}
+                    {unsavedEstateIds.length > 0 && <button onClick={handleSaveData} className='save'>Lưu</button>}
                 </div>
             </div>
+            <ToastContainer /> {/* Component ToastContainer để hiển thị thông báo toast */}
         </div>
     );
 }

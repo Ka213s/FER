@@ -28,59 +28,78 @@ export default function Header() {
     }
 
     return (
-        <div className='header-container'>
-            <div className="col-md-9">
-                <nav className='main-menu'>
-                    <ul className='menu-list'>
-                        <a href='/trangchu'><img className='logo-batdongsan' src='/logoheader/logo-header-batdongsan.png' alt='logobatdongsan' /></a>
-                        <li><Link className='menu-item' to='/trangchu'>TRANG CHỦ</Link></li>
-                        <li><Link className='menu-item' to='/gioithieu'>GIỚI THIỆU</Link></li>
-                        <li className='dropdown'>
-                            <div className='menu-item-container'>
-                                <Link className='menu-item' to='/tintuc'>TIN TỨC </Link>
-                                <i className="fa fa-angle-right"></i>
-                            </div>
-                            <ul className='dropdown-menu1'>
+        <nav class="navbar navbar-default navbar-trans navbar-expand-lg fixed-top">
+            <div class="container">
+                <button class="navbar-toggler collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#navbarDefault" aria-controls="navbarDefault" aria-expanded="false" aria-label="Toggle navigation">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <a class="navbar-brand text-brand" href="/trangchu">Estate<span class="color-b">Agency</span></a>
+
+                <div class="navbar-collapse collapse justify-content-center" id="navbarDefault">
+                    <ul class="navbar-nav">
+
+                        <li class="nav-item">
+                            <a class="nav-link active" href="/trangchu">Trang chủ</a>
+                        </li>
+
+                        <li class="nav-item">
+                            <a class="nav-link " href="/gioithieu">Giới thiệu</a>
+                        </li>
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="/tintuc" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Tin tức</a>
+                            <div class="dropdown-menu">
                                 {tintuc.map((tintuc) => (
                                     <li key={tintuc.id}><Link className='text-drop' to={tintuc.link}>{tintuc.title}</Link></li>
                                 ))}
-                            </ul>
-                        </li>
-                        <li className='dropdown'>
-                            <div className='menu-item-container'>
-                                <Link className='menu-item' to='/duan'>DỰ ÁN</Link>
-                                <i className="fa fa-angle-right"></i>
                             </div>
-                            <ul className='dropdown-menu1'>
+                        </li>
+
+
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="/duan" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Dự án</a>
+                            <div class="dropdown-menu">
                                 {duan.map((duan) => (
                                     <li key={duan.id}><Link className='text-drop' to={duan.link}>{duan.name}</Link></li>
                                 ))}
-                            </ul>
+                            </div>
                         </li>
-                        <li><Link className='menu-item' to='/lienhe'>LIÊN HỆ</Link></li>
+                        <li class="nav-item">
+                            <a class="nav-link " href="/lienhe">Liên hệ</a>
+                        </li>
                     </ul>
-                </nav>
-            </div>
-            <div className="col-md-3 header">
-                <img className='logo_notification' src='/logoheader/logo_notification.png' alt='' />
-                <div className="container-login">
-                    <img className='logo-taikhoan' src='/logoheader/logo_taikhoan.png' alt='' />
-                    {token && userLoginBasicInformationDto ? (
-                        <div className="dropdown">
-                            <span className="login-link">
-                                {userLoginBasicInformationDto.username}
-                            </span>
-                            <div className="dropdown-menu">
-                                {headerItems.map((item) => (
-                                    <Link className="dropdown-item" to={item.link} key={item.id}>{item.name}</Link>
-                                ))}
+                </div>
+
+                <div class="navbar-toggle-wrapper">
+                    <button type="button" class="button" data-bs-toggle="collapse" data-bs-target="#navbarTogglerDemo01">
+                        <div class="header-content">
+                            <div class="container-login">
+                                {token && userLoginBasicInformationDto ? (
+                                    <div class="dropdown">
+                                        <span class="login-link">
+                                            {userLoginBasicInformationDto.username}
+                                        </span>
+                                        <div class="dropdown-menu">
+                                            {headerItems.map((item) => (
+                                                <Link class="dropdown-item" to={item.link} key={item.id}>{item.name}</Link>
+                                            ))}
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <Link class='login-link' to='/dangnhap'>Đăng Nhập</Link>
+                                )}{!token && (
+                                    <Link class='register-link' to='/dangki'>Đăng Ký</Link>
+                                )}
                             </div>
                         </div>
-                    ) : (
-                        <Link className='login-link' to='/dangnhap'>Đăng Nhập</Link>
-                    )}
+                    </button>
                 </div>
+
+
+
             </div>
-        </div>
+        </nav>
     )
 }

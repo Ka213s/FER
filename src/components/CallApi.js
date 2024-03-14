@@ -49,23 +49,68 @@ class CallApi {
             return null;
         }
     }
+    static async getAllReservationAdmin() {
+        try {
+            const response = await axios.get('http://firstrealestate-001-site1.anytempurl.com/api/admin/GetAllReservation');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching real estate data:', error);
+            return null;
+        }
+    }
+    static async getAllRole() {
+        try {
+            const response = await axios.get('http://firstrealestate-001-site1.anytempurl.com/api/role/getAllRole');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching real estate data:', error);
+            return null;
+        }
+    }
+    static async getAllWallet() {
+        try {
+            const response = await axios.get('http://firstrealestate-001-site1.anytempurl.com/api/Wallet/GetAllWallet');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching real estate data:', error);
+            return null;
+        }
+    }
+    static async getAllWalletHistorylWallet() {
+        try {
+            const response = await axios.get('http://firstrealestate-001-site1.anytempurl.com/api/WalletHistory/GetAllWalletHistory');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching real estate data:', error);
+            return null;
+        }
+    }
+    static async getAllLocation() {
+        try {
+            const response = await axios.get('http://firstrealestate-001-site1.anytempurl.com/api/location/getAllLocation');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching real estate data:', error);
+            return null;
+        }
+    }
+    static async GetAllReservationTime() {
+        try {
+            const response = await axios.get('http://firstrealestate-001-site1.anytempurl.com/api/ReservationTime/GetAllReservationTime');
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching real estate data:', error);
+            return null;
+        }
+    }
 
-
+    
     static findReservationById(reservationData, id) {
         if (!reservationData) return null;
         return reservationData.find(reservation => reservation.customerId === id);
     }
 
-    static findRealEstateById(realEstateData, id) {
-        if (!realEstateData) return null;
-        const realEstate = realEstateData.find(realEstate => realEstate.id === id);
-        if (realEstate) {
-            console.log('Real estate with id 84:', realEstate);
-        } else {
-            console.log('Real estate with id 84 not found.');
-        }
-        return realEstate;
-    }
+
 }
 
 export default CallApi;

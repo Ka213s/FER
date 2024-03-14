@@ -15,7 +15,7 @@ body {
 }
 
 .listreal {
-    margin-top: 10px;
+    margin-top: 100px;
     max-width: 100%;
     padding: 20px;
     background-color: #fff;
@@ -23,8 +23,8 @@ body {
     margin-bottom: 10px;
     box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.1);
     border: 1px solid #ccc;
+    margin-left: -86px;
 }
-
 .listreal h1 {
     text-align: center;
     /*  */
@@ -53,7 +53,7 @@ body {
     border: 1px solid #ddd;
     /* Khung cho các ô dữ liệu */
     padding: 8px;
-    /* text-align: left; */
+    /* text-align: justify; */
 }
 
 .table th {
@@ -74,5 +74,6 @@ body {
 
 .table tr {
     font-size: 16px;
+   
     /* text-align: justify; */
 }

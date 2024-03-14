@@ -3,32 +3,26 @@ import CallApi from '../CallApi';
 import axios from 'axios';
 import CustomerMenu from './customer-menu';
 import UserCustomer from '../../list/userCustomer';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Customerdondat() {
-    const [reservationId, setReservationId] = useState(null);
-    const [realEstateId, setRealEstateId] = useState(null);
-    const [loading, setLoading] = useState(false); // State để kiểm soát trạng thái tải
+    const [realEstates, setRealEstates] = useState([]); // State to store real estates
+    const [accounts, setAccounts] = useState([]); // State to store accounts
+    const [customerReservation, setCustomerReservation] = useState([]);
     const userLoginBasicInformationDto = JSON.parse(localStorage.getItem('userLoginBasicInformationDto'));
-    const customerId = userLoginBasicInformationDto?.accountId;
+    const customerId = userLoginBasicInformationDto.accountId;
 
     useEffect(() => {
         async function fetchData() {
             try {
                 const callDataReservations = await CallApi.getAllReservations();
-                const filteredReservations = callDataReservations.filter(reservation => reservation.status === 1);
-
-                if (filteredReservations.length > 0 && customerId) {
-                    const foundReservation = CallApi.findReservationById(filteredReservations, customerId);
-                    setReservationId(foundReservation);
-
-                    const callDataRealEstateData = await CallApi.getAllRealEstate();
-                    if (callDataRealEstateData && foundReservation) {
-                        const foundRealEstate = CallApi.findRealEstateById(callDataRealEstateData, foundReservation.realEstateId);
-                        setRealEstateId(foundRealEstate);
-                    }
-                } else {
-                    console.log("No reservations found with status 1 for the customer");
-                }
+                const filteredReservations = callDataReservations.filter(reservation => reservation.status === 1 && reservation.customerId === customerId);
+                setCustomerReservation(filteredReservations);
+                const callDataRealEstateData = await CallApi.getAllRealEstate();
+                setRealEstates(callDataRealEstateData);
+                const callDataAllAccount = await CallApi.getAllAccount();
+                setAccounts(callDataAllAccount); // Set accounts data
             } catch (error) {
                 console.error("Error fetching data:", error);
             }
@@ -37,33 +31,38 @@ export default function Customerdondat() {
         fetchData();
     }, [customerId]);
 
-    // Function để gửi yêu cầu cập nhật trạng thái đơn hàng
-    const cancelReservation = async () => {
-        setLoading(true); // Bắt đầu tải
+    const cancelReservation = async (id, reservation) => {
         try {
-            // Tạo đối tượng dữ liệu để gửi đi
             const requestData = {
                 status: 0,
-                realEstateId: reservationId.id,
-                customerId: reservationId.customerId,
-                agencyId: '',
-                bookingDate: reservationId.bookingDate,
-                bookingTime: reservationId.bookingTime,
+                realEstateId: reservation.realEstateId,
+                customerId: reservation.customerId,
+                agencyId: reservation.agencyId,
+                bookingDate: reservation.bookingDate,
+                bookingTime: reservation.bookingTime
             };
-
-            // Gửi yêu cầu POST đến URL cụ thể với dữ liệu requestData
-            await axios.put(`http://firstrealestate-001-site1.anytempurl.com/api/reservation/UpdateReservation/${reservationId.id}`, requestData);
-
-            // Cập nhật trạng thái đơn hàng ở client
+            await axios.put(`http://firstrealestate-001-site1.anytempurl.com/api/reservation/UpdateReservation/${id}`, requestData);
+            toast.success('Hủy đơn thành công!', {
+                onClose: () => window.location.reload() // Reload trang sau khi toast đóng
+            });
             window.location.reload();
-
-            setLoading(false); // Kết thúc tải
         } catch (error) {
+
             console.error("Error updating reservation:", error);
-            setLoading(false); // Kết thúc tải (có lỗi xảy ra)
+            toast.error('Cập nhật thất bại!', {
+                onClose: () => window.location.reload() // Tùy chọn, có thể không cần reload nếu lỗi
+            });
         }
     };
 
+    const getRealEstateNameById = (realEstateId) => {
+        const realEstate = realEstates.find(item => item.id === realEstateId);
+        return realEstate ? realEstate.realestateName : 'Unknown';
+    };
+    const getUsernameByCustomerId = (customerId) => {
+        const account = accounts.find(item => item.id === customerId);
+        return account ? account.username : 'Unknown';
+    };
     const formatDate = (dateString) => {
         const date = new Date(dateString);
         const day = date.getDate();
@@ -74,36 +73,28 @@ export default function Customerdondat() {
 
     return (
         <div className='container'>
+            <ToastContainer position="top-right" autoClose={1000} hideProgressBar={false} newestOnTop={false} closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
             <CustomerMenu
                 userLoginBasicInformationDto={userLoginBasicInformationDto}
                 UserMenu={UserCustomer}
             />
             <div>
-                {reservationId ? (
-                    <div className='infobook'>
-                        <h1>Thông tin đặt chỗ</h1>
-                        <p><b>Stt đơn hàng:</b> {reservationId.id}</p>
-                        <p><b>Ngày đặt lịch bất động sản: </b> {formatDate(reservationId.createAt)}</p>
-                        <p><b>Tên khách hàng: </b> {userLoginBasicInformationDto?.username}</p>
-                        {realEstateId ? (
-                            <div>
-                                <p><b>Tên bất động sản: </b> {realEstateId.realestateName}</p>
-                                <p><b>Ngày xem bất động sản:</b> {formatDate(reservationId.bookingDate)}</p>
-                                <p><b>Giờ xem bất động sản:</b> {reservationId.bookingTime}</p>
-                                <p><b>Thông tin liên hệ người dẫn xem bất động sản: </b> Đang cập nhật .....</p>
-                                {/* Nút Hủy đặt */}
-                                {!loading && reservationId.status === 1 && (
-                                    <button onClick={cancelReservation}>Hủy đặt</button>
-                                )}
-                                {/* Hiển thị khi đang tải */}
-                                {loading && <p>Đang xử lý...</p>}
-                            </div>
-                        ) : (
-                            <p>Đang tải dữ liệu</p>
-                        )}
-                    </div>
+                {customerReservation.length > 0 ? (
+                    customerReservation.map((reservation, index) => (
+                        <div key={index} className=''>
+                            <h1>Thông tin đặt chỗ</h1>
+                            <p><b>Mã đơn hàng</b> {reservation.id}</p>
+                            <p><b>Tên bất động sản: </b> {getRealEstateNameById(reservation.realEstateId)}</p>
+                            <p><b>Tên khách hàng đặt chỗ: </b> {getUsernameByCustomerId(reservation.customerId)}</p>
+                            <p><b>Ngày xem bất động sản: </b> {formatDate(reservation.bookingDate)}</p>
+                            <p><b>Giờ xem bất động sản</b> {reservation.bookingTime}</p>
+                            <p><b>Thông tin liên hệ người dẫn xem bất động sản: </b> {reservation.agencyId !== null ? getUsernameByCustomerId(reservation.agencyId) : 'Đang Cập Nhật'}</p>
+                            <button onClick={() => cancelReservation(reservation.id, reservation)}>Hủy đặt</button>
+
+                        </div>
+                    ))
                 ) : (
-                    <p>Bạn chưa đặt đơn</p>
+                    <p style={{marginTop: '10px'}}>Không có đơn đặt chỗ nào.</p>
                 )}
             </div>
         </div>

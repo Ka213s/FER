@@ -30,13 +30,14 @@ export default function Agencydangtinpart1({ sendData }) {
         discription: '',
         length: '',
         width: '',
-        numberOfRooms: '',
+        roomNumber: '',
         discount: '',
         area: '',
         price: '',
-        city: '', // Thêm provinceName vào propertyInfo
-        district: '', // Thêm districtName vào propertyInfo
-        ward: '', // Thêm wardName vào propertyInfo
+        status: 1,
+        // city: '', // Thêm provinceName vào propertyInfo
+        // district: '', // Thêm districtName vào propertyInfo
+        // ward: '', // Thêm wardName vào propertyInfo
         directId: '',
         firebaseId: "",
         investorId: userLoginBasicInformationDto.accountId,
@@ -78,9 +79,9 @@ export default function Agencydangtinpart1({ sendData }) {
         setSelectedLocation(selectedLocation); // Cập nhật selectedLocation
         setPropertyInfo(prevState => ({
             ...prevState,
-            provinceName: selectedLocation.provinceName, // Cập nhật provinceName
-            districtName: selectedLocation.districtName, // Cập nhật districtName
-            wardName: selectedLocation.wardName, // Cập nhật wardName
+            city: selectedLocation.provinceName, // Cập nhật provinceName
+            district: selectedLocation.districtName, // Cập nhật districtName
+            ward: selectedLocation.wardName, // Cập nhật wardName
 
         }));
     };
@@ -122,25 +123,38 @@ export default function Agencydangtinpart1({ sendData }) {
     };
     return (
         <div className='thongtinchitietdangtin'>
-            <div className='thongtinchitietdangtinluachon'>
-                <LocationSelector onSelect={handleLocationSelect} selectedLocation={selectedLocation} className='luachon' />
-                <select onChange={(e) => handleDirectSelect(e.target.value)}>
-                    <option value="">Select Direct</option>
-                    {directs.map(direct => (
-                        <option key={direct.id} value={direct.id}>{direct.directName}</option>
-                    ))}
-                </select>
-            </div>
             <div className='thongtinchitietdangtindulieu'>
-                <input type="text" name="realestateName" value={propertyInfo.realestateName} onChange={handleInputChange} placeholder="Tên bất động sản" />
-                <input type="text" name="address" value={propertyInfo.address} onChange={handleInputChange} placeholder="Số nhà" />
-                <textarea name="discription" value={propertyInfo.discription} onChange={handleInputChange} placeholder="Mô tả" />
-                <input type="text" name="length" value={propertyInfo.length} onChange={handleInputChange} placeholder="Chiều dài (đơn vị m)" />
-                <input type="text" name="width" value={propertyInfo.width} onChange={handleInputChange} placeholder="Chiều rộng (đơn vị m)" />
-                <input type="text" name="numberOfRooms" value={propertyInfo.numberOfRooms} onChange={handleInputChange} placeholder="Số phòng" />
-                <input type="text" name="discount" value={propertyInfo.discount} onChange={handleInputChange} placeholder="Chiết Khấu" />
-                <input type="text" name="price" value={propertyInfo.price} onChange={handlePriceInputChange} placeholder="Mức giá" />
-                <input type="text" name="area" value={propertyInfo.area} placeholder="Diện tích (m^2)" readOnly />
+                <div className='thongtinchitietdangtindulieutieude'>
+                    <span className='tieude'>Thông tin tin cơ bản</span>
+                    <input type="text" name="realestateName" value={propertyInfo.realestateName} onChange={handleInputChange} placeholder="Tên bất động sản" />
+                </div>
+
+                <div className='thongtinchitietdangtinluachon'>
+                    <LocationSelector onSelect={handleLocationSelect} selectedLocation={selectedLocation} className='luachon' />
+                    <select onChange={(e) => handleDirectSelect(e.target.value)}>
+                        <option value="">Select Direct</option>
+                        {directs.map(direct => (
+                            <option key={direct.id} value={direct.id}>{direct.directName}</option>
+                        ))}
+                    </select>
+                </div>
+                <div style={{marginTop: '10px', marginBottom: '10px'}}>
+                    <span className='' style={{fontSize: '16px'}}>Địa chỉ</span>
+                    <input style={{marginTop: "10px"}} type="text" name="address" value={propertyInfo.address} onChange={handleInputChange} placeholder="Số nhà" />
+                </div>
+                <div>
+                    <span className='tieude'>Thông tin bài viết</span>
+                    <textarea name="discription" value={propertyInfo.discription} onChange={handleInputChange} placeholder="Mô tả" />
+                </div>
+                <div>
+                    <span className='tieude'>Thông tin bất động sản</span>
+                    <input type="text" name="length" value={propertyInfo.length} onChange={handleInputChange} placeholder="Chiều dài (đơn vị m)" />
+                    <input type="text" name="width" value={propertyInfo.width} onChange={handleInputChange} placeholder="Chiều rộng (đơn vị m)" />
+                    <input type="text" name="area" value={propertyInfo.area} placeholder="Diện tích (m^2)" readOnly />
+                    <input type="text" name="roomNumber" value={propertyInfo.roomNumber} onChange={handleInputChange} placeholder="Số phòng" />
+                    <input type="text" name="discount" value={propertyInfo.discount} onChange={handleInputChange} placeholder="Chiết Khấu" />
+                    <input type="text" name="price" value={propertyInfo.price} onChange={handlePriceInputChange} placeholder="Mức giá" />
+                </div>
             </div>
         </div>
     )
